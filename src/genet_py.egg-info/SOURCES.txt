@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+src/genet/__init__.py
+src/genet/model.py
+src/genet_py.egg-info/PKG-INFO
+src/genet_py.egg-info/SOURCES.txt
+src/genet_py.egg-info/dependency_links.txt
+src/genet_py.egg-info/requires.txt
+src/genet_py.egg-info/top_level.txt
