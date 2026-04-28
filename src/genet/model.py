@@ -93,7 +93,7 @@ class GENET:
         self.cache_dir = Path(user_cache_dir("genet-py"))
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-        model_dir = Path(__file__).resolve().parents[2] / "models"
+        model_dir = Path(__file__).resolve().parent / "models"
 
         scaler_npz = np.load(model_dir / "scaler.npz")
         self.scale = scaler_npz["scale"]

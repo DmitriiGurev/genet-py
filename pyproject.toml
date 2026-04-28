@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "genet-py"
-version = "0.1.1"
+version = "0.1.2"
 description = "GENET Python library"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -26,5 +26,4 @@ Issues = "https://github.com/DmitriiGurev/genet-py/issues"
 genet = ["models/*"]
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["genet*"]
+where = ["src"]
