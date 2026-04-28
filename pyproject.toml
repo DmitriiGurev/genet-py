@@ -22,5 +22,9 @@ Homepage = "https://github.com/DmitriiGurev/genet-py"
 Repository = "https://github.com/DmitriiGurev/genet-py"
 Issues = "https://github.com/DmitriiGurev/genet-py/issues"
 
+[tool.setuptools.package-data]
+genet = ["models/*"]
+
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
+include = ["genet*"]
