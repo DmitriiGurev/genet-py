@@ -1,6 +1,0 @@
-geopack
-numpy
-pandas
-platformdirs
-scipy
-swvo
