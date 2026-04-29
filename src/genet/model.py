@@ -14,7 +14,7 @@ from geopack import geopack
 
 DriverType = Literal["sme", "hp30", "speed", "proton_density", "bavg", "bx_gsm", "by_gsm", "bz_gsm"]
 AggregateFunction = Literal["current", "mean", "max", "fraction_negative"]
-
+Percentile = Literal["5", "25", "50", "75", "95"]
 
 @dataclass(frozen=True)
 class Driver:
@@ -101,9 +101,8 @@ class GENET:
         self.scale = scaler_npz["scale"]
         self.min_ = scaler_npz["min"]
 
-        weight_npz = np.load(model_dir / "weights.npz")
-        self.kernels = [weight_npz[k] for k in sorted(k for k in weight_npz if k.startswith("kernel_"))]
-        self.biases = [weight_npz[k] for k in sorted(k for k in weight_npz if k.startswith("bias_"))]
+        self._model_dir = model_dir
+        self._weights_cache: dict[str, tuple[list[np.ndarray], list[np.ndarray]]] = {}
 
     @staticmethod
     def _gelu(x: np.ndarray) -> np.ndarray:
@@ -216,25 +215,51 @@ class GENET:
         out = out.reindex(times).interpolate(method="time").ffill().bfill()
         return out.to_numpy(dtype=np.float32)
 
-    def _static_branch(self, x: np.ndarray) -> np.ndarray:
-        w, b = self.kernels, self.biases
-        hl0 = self._gelu(x @ w[0] + b[0])
-        hl1 = self._gelu(hl0 @ w[1] + b[1])
-        hl2 = self._gelu(hl1 @ w[2] + b[2])
-        return hl2 @ w[3] + b[3]
+    def _static_branch(
+        self,
+        x: np.ndarray,
+        kernels: list[np.ndarray],
+        biases: list[np.ndarray]
+    ) -> np.ndarray:
+        hl0 = self._gelu(x @ kernels[0] + biases[0])
+        hl1 = self._gelu(hl0 @ kernels[1] + biases[1])
+        hl2 = self._gelu(hl1 @ kernels[2] + biases[2])
+        return hl2 @ kernels[3] + biases[3]
 
-    def _dynamic_branch(self, x: np.ndarray, y_static: np.ndarray) -> np.ndarray:
-        w, b = self.kernels, self.biases
+    def _dynamic_branch(
+        self,
+        x: np.ndarray,
+        y_static: np.ndarray,
+        kernels: list[np.ndarray],
+        biases: list[np.ndarray],
+    ) -> np.ndarray:
         x_full = np.concatenate([x, y_static], axis=1)
-        hl0 = self._gelu(x_full @ w[4] + b[4])
-        hl1 = self._gelu(hl0 @ w[5] + b[5])
-        hl2 = self._gelu(hl1 @ w[6] + b[6])
-        return hl2 @ w[7] + b[7]
+        hl0 = self._gelu(x_full @ kernels[4] + biases[4])
+        hl1 = self._gelu(hl0 @ kernels[5] + biases[5])
+        hl2 = self._gelu(hl1 @ kernels[6] + biases[6])
+        return hl2 @ kernels[7] + biases[7]
 
     def _to_real_scale(self, x: np.ndarray) -> np.ndarray:
         return 10**x - 1
 
-    def predict(self, time, coords_gsm, energy, pitch_angle):
+    def _get_model_weights(self, percentile: Percentile) -> tuple[list[np.ndarray], list[np.ndarray]]:
+        cached = self._weights_cache.get(percentile)
+        if cached is not None:
+            return cached
+
+        weight_npz = np.load(self._model_dir / f"weights_{percentile}.npz")
+        kernels = [weight_npz[k] for k in sorted(k for k in weight_npz if k.startswith("kernel_"))]
+        biases = [weight_npz[k] for k in sorted(k for k in weight_npz if k.startswith("bias_"))]
+        self._weights_cache[percentile] = (kernels, biases)
+        return kernels, biases
+
+    def predict(self, time, coords_gsm, energy, pitch_angle, percentile: Percentile = "50"):
+        percentile = str(percentile)
+        if percentile not in ("5", "25", "50", "75", "95"):
+            raise ValueError("percentile must be one of: 5, 25, 50, 75, 95")
+
+        kernels, biases = self._get_model_weights(percentile)
+
         time_values = [self._to_utc_datetime(t) for t in self._as_list(time)]
         coords_values = self._normalize_coords(coords_gsm)
         energy_values = self._as_list(energy)
@@ -295,8 +320,8 @@ class GENET:
         x = x * self.scale + self.min_
 
         static_inds = [1, 2, 3, 4, 0, 5]
-        y_static = self._static_branch(x[:, static_inds])
-        y_dynamic = self._dynamic_branch(x, y_static)
+        y_static = self._static_branch(x[:, static_inds], kernels, biases)
+        y_dynamic = self._dynamic_branch(x, y_static, kernels, biases)
         y = self._relu(y_static + y_dynamic)
 
         if pitch_mode == "omnidirectional":
