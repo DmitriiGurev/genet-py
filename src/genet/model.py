@@ -10,6 +10,8 @@ import pandas as pd
 from platformdirs import user_cache_dir
 from scipy.interpolate import PchipInterpolator, RegularGridInterpolator
 
+from geopack import geopack
+
 DriverType = Literal["sme", "hp30", "speed", "proton_density", "bavg", "bx_gsm", "by_gsm", "bz_gsm"]
 AggregateFunction = Literal["current", "mean", "max", "fraction_negative"]
 
@@ -274,8 +276,6 @@ class GENET:
         r = np.sqrt(x_gsm**2 + y_gsm**2 + z_gsm**2)
         lat = np.arcsin(z_gsm / r)
         mlt = (12.0 + np.degrees(np.arctan2(y_gsm, x_gsm)) / 15.0) % 24.0
-
-        from geopack import geopack
 
         unix0 = datetime(1970, 1, 1, tzinfo=timezone.utc)
         dipole_tilt = np.asarray(
