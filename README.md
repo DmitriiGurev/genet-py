@@ -4,7 +4,7 @@
     <picture>
         <source media="(prefers-color-scheme: dark)" srcset="assets/logo-light.png">
         <source media="(prefers-color-scheme: light)" srcset="assets/logo-dark.png">
-        <img src="assets/logo-dark.png" alt="genet-py logo" width="160">
+        <img src="assets/logo-dark.png" alt="genet-py logo" width="86">
     </picture>
 </p>
 
