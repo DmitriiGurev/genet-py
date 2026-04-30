@@ -181,9 +181,9 @@ class GENET:
 
     @staticmethod
     def _validate_energy_range(energy: np.ndarray) -> None:
-        invalid = (energy < 100.0) | (energy > 80000.0)
+        invalid = (energy < 0.1) | (energy > 80.0)
         if np.any(invalid):
-            raise ValueError("energy out of model range. Expected 100 <= energy <= 80000 eV")
+            raise ValueError("energy out of model range. Expected 0.1 <= energy <= 80 keV")
 
     @staticmethod
     def _validate_pitch_angle_range(pitch: np.ndarray) -> None:
@@ -347,7 +347,7 @@ class GENET:
         )
 
         x = np.empty((n, 42), dtype=np.float32)
-        x[:, 0] = np.log10(energy_arr)
+        x[:, 0] = np.log10(energy_arr * 1e3)
         x[:, 1] = r * 6378.0
         x[:, 2] = np.sin(lat)
         x[:, 3] = np.sin(mlt * np.pi / 12.0) * np.cos(lat)
