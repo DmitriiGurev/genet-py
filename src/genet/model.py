@@ -1,11 +1,17 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta, timezone
+from scipy.interpolate import PchipInterpolator, RegularGridInterpolator
+
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Literal
 from platformdirs import user_cache_dir
-from scipy.interpolate import PchipInterpolator, RegularGridInterpolator
+
+from swvo.io.solar_wind import SWOMNI
+from swvo.io.sme import SMESuperMAG
+from swvo.io.hp import Hp30GFZ
+
 from geopack import geopack
 
 DriverType = Literal["sme", "hp30", "speed", "proton_density", "bavg", "bx_gsm", "by_gsm", "bz_gsm"]
@@ -196,10 +202,6 @@ class GENET:
     def _load_data(self, start: datetime, end: datetime) -> pd.DataFrame:
         start = self._to_utc_datetime(start)
         end = self._to_utc_datetime(end)
-
-        from swvo.io.solar_wind import SWOMNI
-        from swvo.io.sme import SMESuperMAG
-        from swvo.io.hp import Hp30GFZ
 
         try:
             omni = SWOMNI(self.cache_dir).read(start, end, download=True)
