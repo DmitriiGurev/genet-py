@@ -2,9 +2,9 @@
 
 <p>
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/logo-light.png">
-        <source media="(prefers-color-scheme: light)" srcset="assets/logo-dark.png">
-        <img src="assets/logo-dark.png" alt="genet-py logo" width="100">
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/DmitriiGurev/genet-py/master/assets/logo-light.png">
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/DmitriiGurev/genet-py/master/assets/logo-dark.png">
+        <img src="https://raw.githubusercontent.com/DmitriiGurev/genet-py/master/assets/logo-dark.png" alt="genet-py logo" width="100">
     </picture>
 </p>
 
