@@ -10,12 +10,12 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 dependencies = [
-    "geopack",
-    "numpy",
-    "pandas",
-    "platformdirs",
-    "scipy",
-    "swvo",
+    "geopack==1.0.12",
+    "numpy>=2.4.4",
+    "pandas>=3.0.2",
+    "platformdirs>=4.9.6",
+    "scipy>=1.17.1",
+    "swvo==1.2.2",
     "black>=26.3.0",
     "pylint>=4.0.0",
 ]
