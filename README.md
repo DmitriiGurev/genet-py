@@ -20,7 +20,7 @@ The model is a neural network that can reconstruct pitch-angle distributions of 
 pip install genet-py
 ```
 
-You need a valid SuperMAG account to download the SME index.
+You need a valid [SuperMAG account](https://supermag.jhuapl.edu/indices/) to download the SME index.
 
 ## Usage
 
