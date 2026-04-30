@@ -1,15 +1,11 @@
-from __future__ import annotations
-
-from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
-from typing import Literal
-
 import numpy as np
 import pandas as pd
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from dataclasses import dataclass
+from typing import Literal
 from platformdirs import user_cache_dir
 from scipy.interpolate import PchipInterpolator, RegularGridInterpolator
-
 from geopack import geopack
 
 DriverType = Literal["sme", "hp30", "speed", "proton_density", "bavg", "bx_gsm", "by_gsm", "bz_gsm"]
