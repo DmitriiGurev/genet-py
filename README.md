@@ -1,4 +1,4 @@
-[![Pre-release](https://img.shields.io/github/v/release/DmitriiGurev/genet-py?include_prereleases&label=pre-release&color=orange)](https://github.com/DmitriiGurev/genet-py/releases) [![TestPyPI](https://img.shields.io/badge/dynamic/json?label=TestPyPI&url=https://test.pypi.org/pypi/genet-py/json&query=$.info.version&color=blue)](https://test.pypi.org/project/genet-py/)
+[![Pre-release](https://img.shields.io/github/v/release/DmitriiGurev/genet-py?include_prereleases&label=pre-release&color=orange)](https://github.com/DmitriiGurev/genet-py/releases) [![PyPI](https://img.shields.io/badge/dynamic/json?label=PyPI&url=https://pypi.org/pypi/genet-py/json&query=$.info.version&color=blue)](https://pypi.org/project/genet-py/)
 
 <p>
     <picture>
