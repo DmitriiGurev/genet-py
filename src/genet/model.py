@@ -92,6 +92,14 @@ _DRIVER_LIST = [
 
 
 class GENET:
+    """
+    Machine learning model for magnetospheric electron fluxes.
+
+    Parameters
+    ----------
+    supermag_username : str
+        SuperMAG username used to access the SME index.
+    """
     def __init__(self, supermag_username: str) -> None:
         self.supermag_username = supermag_username
         self.cache_dir = Path(user_cache_dir("genet-py"))
@@ -289,6 +297,30 @@ class GENET:
         return kernels, biases
 
     def predict(self, time, coords_gsm, energy, pitch_angle, percentile: Percentile = "50"):
+        """
+        Predict electron flux.
+
+        Parameters
+        ----------
+        time : datetime | Sequence[datetime]
+            Query time(s). Naive datetimes are treated as UTC.
+        coords_gsm : Sequence[float] | Sequence[Sequence[float]] | np.ndarray
+            GSM coordinates in Earth radii as ``(x, y, z)`` or a batch shaped
+            ``(N, 3)``. Valid range: ``-20 <= x,y <= 20`` and ``-15 <= z <= 12``.
+        energy : float | Sequence[float]
+            Energy in keV. Valid range: ``0.1 <= energy <= 80``.
+        pitch_angle : float | Sequence[float] | Literal["omnidirectional"]
+            Pitch angle in degrees (valid range ``10 <= pitch_angle <= 170``),
+            or ``"omnidirectional"`` to return the omnidirectional flux.
+        percentile : {"5", "25", "50", "75", "95"}, default "50" (median)
+            Percentile to predict.
+
+        Returns
+        -------
+        np.ndarray
+            Predicted flux values in 1 / (cm2 s sr keV). Shape is
+            ``(N,)`` where ``N`` is the input length.
+        """
         percentile = str(percentile)
         if percentile not in ("5", "25", "50", "75", "95"):
             raise ValueError("percentile must be one of: 5, 25, 50, 75, 95")
