@@ -7,7 +7,7 @@ name = "genet-py"
 version = "0.1.4"
 description = "GENET Python library"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 requires-python = ">=3.10"
 dependencies = [
     "geopack",
