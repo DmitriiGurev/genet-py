@@ -16,6 +16,8 @@ dependencies = [
     "platformdirs",
     "scipy",
     "swvo",
+    "black>=26.3.0",
+    "pylint>=4.0.0",
 ]
 
 [project.urls]
