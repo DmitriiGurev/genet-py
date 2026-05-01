@@ -237,12 +237,12 @@ class GENET:
         try:
             omni = SWOMNI(self.cache_dir).read(start, end, download=True)
             self._validate_data(omni, "omni", start, end)
+            for col in omni.columns:
+                self._validate_data(omni[col], f"omni {col}", start, end)
             omni.index.name = "time"
             if "file_name" in omni.columns:
                 omni = omni.drop(columns="file_name")
             omni = omni.astype(np.float64)
-            for col in omni.columns:
-                omni.loc[:, col] = self._interpolate_missing(omni[col])
 
             sme = SMESuperMAG(self.supermag_username, self.cache_dir).read(
                 start, end, download=True
@@ -254,7 +254,6 @@ class GENET:
             sme_col = sme.columns[0]
             sme = sme.rename(columns={sme_col: "sme"})
             sme = sme.astype(np.float64)
-            sme.loc[:, "sme"] = self._interpolate_missing(sme["sme"])
 
             hp30 = Hp30GFZ(self.cache_dir).read(start, end, download=True)
             self._validate_data(hp30, "hp30", start, end)
