@@ -18,6 +18,11 @@ dependencies = [
     "swvo==1.2.2",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/DmitriiGurev/genet-py"
 Repository = "https://github.com/DmitriiGurev/genet-py"
@@ -28,3 +33,7 @@ genet = ["models/*"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
