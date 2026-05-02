@@ -283,7 +283,9 @@ def test_predict_invalid(monkeypatch, tmp_path):
         g.predict(datetime(2024, 1, 1), (1, 0, 0), 1.0, 90.0, percentile="10")
 
     monkeypatch.setattr(g, "_get_model_weights", lambda _p: ([], []))
-    with pytest.raises(ValueError, match="pitch_angle string must be 'omnidirectional'"):
+    with pytest.raises(
+        ValueError, match="pitch_angle string must be 'omnidirectional'"
+    ):
         g.predict(datetime(2024, 1, 1), (1, 0, 0), 1.0, "bad", percentile="50")
 
 
@@ -321,8 +323,12 @@ def test_predict(monkeypatch, tmp_path):
     monkeypatch.setattr(g, "_build_drivers", lambda data, times: x_full[:, 6:])
     monkeypatch.setattr("genet.model.geopack.recalc", lambda _t: 0.0)
 
-    monkeypatch.setattr(g, "_static_branch", lambda x, k, b: np.ones((n, 9), dtype=np.float32))
-    monkeypatch.setattr(g, "_dynamic_branch", lambda x, y, k, b: np.ones((n, 9), dtype=np.float32))
+    monkeypatch.setattr(
+        g, "_static_branch", lambda x, k, b: np.ones((n, 9), dtype=np.float32)
+    )
+    monkeypatch.setattr(
+        g, "_dynamic_branch", lambda x, y, k, b: np.ones((n, 9), dtype=np.float32)
+    )
 
     times = [
         datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc),
