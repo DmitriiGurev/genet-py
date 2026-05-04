@@ -14,9 +14,12 @@ from swvo.io.hp import Hp30GFZ
 
 from geopack import geopack
 
-DriverType = Literal["sme", "hp30", "speed", "proton_density", "bavg", "bx_gsm", "by_gsm", "bz_gsm"]
+DriverType = Literal[
+    "sme", "hp30", "speed", "proton_density", "bavg", "bx_gsm", "by_gsm", "bz_gsm"
+]
 AggregateFunction = Literal["current", "mean", "max", "fraction_negative"]
 Percentile = Literal["5", "25", "50", "75", "95"]
+
 
 @dataclass(frozen=True)
 class Driver:
@@ -100,6 +103,7 @@ class GENET:
     supermag_username : str
         SuperMAG username used to access the SME index.
     """
+
     def __init__(self, supermag_username: str) -> None:
         self.supermag_username = supermag_username
         self.cache_dir = Path(user_cache_dir("genet-py"))
@@ -151,7 +155,9 @@ class GENET:
         if isinstance(value, np.ndarray):
             return value.ndim == 1 and value.shape[0] == 3
         if isinstance(value, (tuple, list)) and len(value) == 3:
-            return all(isinstance(v, (int, float, np.integer, np.floating)) for v in value)
+            return all(
+                isinstance(v, (int, float, np.integer, np.floating)) for v in value
+            )
         return False
 
     def _normalize_coords(self, coords_gsm) -> list:
@@ -166,9 +172,13 @@ class GENET:
         if isinstance(coords_gsm, list):
             if all(self._is_single_coord(c) for c in coords_gsm):
                 return [tuple(c) for c in coords_gsm]
-            raise ValueError("coords_gsm list must be a single 3-element coordinate or contain only 3-element coordinates")
+            raise ValueError(
+                "coords_gsm list must be a single 3-element coordinate or contain only 3-element coordinates"
+            )
 
-        raise ValueError("coords_gsm must be a 3-element coordinate or a list/array of such coordinates")
+        raise ValueError(
+            "coords_gsm must be a 3-element coordinate or a list/array of such coordinates"
+        )
 
     @staticmethod
     def _broadcast(values: list, n: int, name: str) -> list:
@@ -191,17 +201,30 @@ class GENET:
     def _validate_energy_range(energy: np.ndarray) -> None:
         invalid = (energy < 0.1) | (energy > 80.0)
         if np.any(invalid):
-            raise ValueError("energy out of model range. Expected 0.1 <= energy <= 80 keV")
+            raise ValueError(
+                "energy out of model range. Expected 0.1 <= energy <= 80 keV"
+            )
 
     @staticmethod
     def _validate_pitch_angle_range(pitch: np.ndarray) -> None:
         invalid = (pitch < 10.0) | (pitch > 170.0)
         if np.any(invalid):
-            raise ValueError("pitch_angle out of model range. Expected 10 <= pitch_angle <= 170 degrees")
+            raise ValueError(
+                "pitch_angle out of model range. Expected 10 <= pitch_angle <= 170 degrees"
+            )
 
     @staticmethod
-    def _validate_data(data: pd.DataFrame | pd.Series, parameter_name: str, start: datetime, end: datetime) -> None:
-        is_all_nan = bool(data.isna().all().all()) if isinstance(data, pd.DataFrame) else bool(data.isna().all())
+    def _validate_data(
+        data: pd.DataFrame | pd.Series,
+        parameter_name: str,
+        start: datetime,
+        end: datetime,
+    ) -> None:
+        is_all_nan = (
+            bool(data.isna().all().all())
+            if isinstance(data, pd.DataFrame)
+            else bool(data.isna().all())
+        )
         if data.empty or is_all_nan:
             raise ValueError(
                 f"'{parameter_name}' is not available for interval {start} to {end} (UTC)"
@@ -214,14 +237,16 @@ class GENET:
         try:
             omni = SWOMNI(self.cache_dir).read(start, end, download=True)
             self._validate_data(omni, "omni", start, end)
+            for col in omni.columns:
+                self._validate_data(omni[col], f"omni {col}", start, end)
             omni.index.name = "time"
             if "file_name" in omni.columns:
                 omni = omni.drop(columns="file_name")
             omni = omni.astype(np.float64)
-            for col in omni.columns:
-                omni.loc[:, col] = self._interpolate_missing(omni[col])
 
-            sme = SMESuperMAG(self.supermag_username, self.cache_dir).read(start, end, download=True)
+            sme = SMESuperMAG(self.supermag_username, self.cache_dir).read(
+                start, end, download=True
+            )
             self._validate_data(sme, "sme", start, end)
             sme.index.name = "time"
             if "file_name" in sme.columns:
@@ -229,7 +254,6 @@ class GENET:
             sme_col = sme.columns[0]
             sme = sme.rename(columns={sme_col: "sme"})
             sme = sme.astype(np.float64)
-            sme.loc[:, "sme"] = self._interpolate_missing(sme["sme"])
 
             hp30 = Hp30GFZ(self.cache_dir).read(start, end, download=True)
             self._validate_data(hp30, "hp30", start, end)
@@ -259,10 +283,7 @@ class GENET:
         return out.to_numpy(dtype=np.float32)
 
     def _static_branch(
-        self,
-        x: np.ndarray,
-        kernels: list[np.ndarray],
-        biases: list[np.ndarray]
+        self, x: np.ndarray, kernels: list[np.ndarray], biases: list[np.ndarray]
     ) -> np.ndarray:
         hl0 = self._gelu(x @ kernels[0] + biases[0])
         hl1 = self._gelu(hl0 @ kernels[1] + biases[1])
@@ -285,18 +306,28 @@ class GENET:
     def _to_real_scale(self, x: np.ndarray) -> np.ndarray:
         return 10**x - 1
 
-    def _get_model_weights(self, percentile: Percentile) -> tuple[list[np.ndarray], list[np.ndarray]]:
+    def _get_model_weights(
+        self, percentile: Percentile
+    ) -> tuple[list[np.ndarray], list[np.ndarray]]:
         cached = self._weights_cache.get(percentile)
         if cached is not None:
             return cached
 
         weight_npz = np.load(self._model_dir / f"weights_{percentile}.npz")
-        kernels = [weight_npz[k] for k in sorted(k for k in weight_npz if k.startswith("kernel_"))]
-        biases = [weight_npz[k] for k in sorted(k for k in weight_npz if k.startswith("bias_"))]
+        kernels = [
+            weight_npz[k]
+            for k in sorted(k for k in weight_npz if k.startswith("kernel_"))
+        ]
+        biases = [
+            weight_npz[k]
+            for k in sorted(k for k in weight_npz if k.startswith("bias_"))
+        ]
         self._weights_cache[percentile] = (kernels, biases)
         return kernels, biases
 
-    def predict(self, time, coords_gsm, energy, pitch_angle, percentile: Percentile = "50"):
+    def predict(
+        self, time, coords_gsm, energy, pitch_angle, percentile: Percentile = "50"
+    ):
         """
         Predict electron flux.
 
@@ -349,7 +380,10 @@ class GENET:
             pitch_values = None
         else:
             pitch_mode = "angle"
-            pitch_values = np.asarray(self._broadcast(self._as_list(pitch_angle), n, "pitch_angle"), dtype=np.float32)
+            pitch_values = np.asarray(
+                self._broadcast(self._as_list(pitch_angle), n, "pitch_angle"),
+                dtype=np.float32,
+            )
             self._validate_pitch_angle_range(pitch_values)
 
         times_index = pd.DatetimeIndex(times).sort_values()
@@ -374,7 +408,12 @@ class GENET:
 
         unix0 = datetime(1970, 1, 1, tzinfo=timezone.utc)
         dipole_tilt = np.asarray(
-            [geopack.recalc(pd.to_timedelta(t.to_pydatetime() - unix0).total_seconds()) for t in pd.DatetimeIndex(times)],
+            [
+                geopack.recalc(
+                    pd.to_timedelta(t.to_pydatetime() - unix0).total_seconds()
+                )
+                for t in pd.DatetimeIndex(times)
+            ],
             dtype=np.float32,
         )
 
@@ -395,7 +434,9 @@ class GENET:
         y = self._relu(y_static + y_dynamic)
 
         if pitch_mode == "omnidirectional":
-            y_omnidirectional = np.sum([y[:, i] * np.sin(np.radians(10 + i * 20)) for i in range(9)], axis=0) / np.sum(np.sin(np.radians(np.arange(10, 180, 20))))
+            y_omnidirectional = np.sum(
+                [y[:, i] * np.sin(np.radians(10 + i * 20)) for i in range(9)], axis=0
+            ) / np.sum(np.sin(np.radians(np.arange(10, 180, 20))))
             return self._to_real_scale(y_omnidirectional)
 
         interp = RegularGridInterpolator(

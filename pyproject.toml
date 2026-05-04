@@ -4,18 +4,23 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "genet-py"
-version = "0.1.1"
+version = "0.1.2"
 description = "GENET Python library"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 dependencies = [
-    "geopack",
-    "numpy",
-    "pandas",
-    "platformdirs",
-    "scipy",
-    "swvo",
+    "geopack==1.0.12",
+    "numpy>=2.4.4",
+    "pandas>=3.0.2",
+    "platformdirs>=4.9.6",
+    "scipy>=1.17.1",
+    "swvo==1.2.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
 ]
 
 [project.urls]
@@ -28,3 +33,7 @@ genet = ["models/*"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
